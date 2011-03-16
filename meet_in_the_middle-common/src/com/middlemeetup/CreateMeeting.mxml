@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark"
+		 width="100%" height="100%">
+	
+	<fx:Metadata>
+		[Event(name="meetingCreated", type="flash.events.Event")]
+	</fx:Metadata>
+	
+	<fx:Declarations>
+		<s:DateTimeFormatter id="dtf"/>
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+		[Bindable]
+		private var formValid:Boolean = false;
+		
+		private var gpsLocation:String = "";
+		
+		private var geolocation:Object;
+			
+		private var _useGPS:Boolean;
+		
+		[Bindable]
+		public function get useGPS():Boolean
+		{
+			return _useGPS;
+		}
+		
+		public function set useGPS(_useGPS:Boolean):void
+		{
+			this._useGPS = _useGPS;
+			
+			try
+			{
+				var geolocationClass:Class = ApplicationDomain.currentDomain.getDefinition("flash.sensors.Geolocation") as Class;
+				
+				if (geolocationClass.isSupported)
+				{
+					geolocation = new geolocationClass();
+					
+					if (geolocation.muted)
+					{
+						this._useGPS = false;
+						return;
+					}
+					
+					geolocation.addEventListener(GeolocationEvent.UPDATE, function(event:GeolocationEvent):void {
+						Model.instance.yourLocation = gpsLocation = event.latitude + "," + event.longitude;
+						yourLocationFormItem.label = "Your Location: Detected!";
+						checkForm();
+					}, false, 0, true);
+				}
+				else
+				{
+					this._useGPS = false;
+				}
+			}
+			catch (error:Error)
+			{
+				this._useGPS = false;
+			}
+		}
+		
+		private function checkForm():void
+		{
+			formValid = (yourName.text.length > 0) && (theirName.text.length > 0);
+			
+			formValid = (yourName.text != theirName.text);
+			
+			if ((useGPS) && (gpsLocation.length < 1))
+			{
+				formValid = false;
+			}
+		
+			if ((!useGPS) && (yourAddress.text.length < 1))
+			{
+				formValid = false;
+			}
+		}
+		
+		private function submit():void
+		{
+			if (formValid)
+			{
+				if (geolocation != null)
+				{
+					geolocation = null;
+				}
+				
+				MeetingService.instance.createMeeting();
+				
+				form.visible = false;
+				waitingGroup.visible = true;
+			}
+		}
+			
+		public function cancel():void
+		{
+			form.visible = true;
+			waitingGroup.visible = false;
+		}
+		]]>
+	</fx:Script>
+	
+	<s:creationComplete>
+		MeetingService.instance.addEventListener("meetingCreated", function(meetingEvent:MeetingEvent):void {
+			if (waitingGroup.visible)
+			{
+				dispatchEvent(meetingEvent);
+			}
+		});
+	</s:creationComplete>
+	
+	<s:Form id="form" skinClass="spark.skins.spark.StackedFormSkin" width="100%">
+		<s:FormItem label="Your Name:" skinClass="spark.skins.spark.StackedFormItemSkin" width="100%">
+			<s:TextInput id="yourName" width="100%" text="@{Model.instance.yourName}" change="checkForm()" enter="submit()"/>
+		</s:FormItem>
+		<s:FormItem label="Their Name:" skinClass="spark.skins.spark.StackedFormItemSkin" width="100%">
+			<s:TextInput id="theirName" width="100%" text="@{Model.instance.theirName}" change="checkForm()" enter="submit()"/>
+		</s:FormItem>
+		<s:FormItem id="yourAddressFormItem" label="Your Address:" skinClass="spark.skins.spark.StackedFormItemSkin" width="100%" visible="{!useGPS}" includeInLayout="{!useGPS}">
+			<s:TextInput id="yourAddress" width="100%" text="@{Model.instance.yourLocation}" change="checkForm()" enter="submit()"/>
+		</s:FormItem>
+		<s:FormItem id="yourLocationFormItem" label="Your Location: Finding..." skinClass="spark.skins.spark.StackedFormItemSkin" width="100%" visible="{useGPS}" includeInLayout="{useGPS}"/>
+		<s:Group width="100%">				
+			<s:Button id="button" label="Middle Meetup!" horizontalCenter="0" enabled="{formValid}" click="submit()"/>
+		</s:Group>
+	</s:Form>
+	
+	<s:Group id="waitingGroup" visible="false" width="100%" height="100%" fontSize="22">
+		<s:layout>
+			<s:VerticalLayout paddingBottom="15" paddingLeft="15" paddingRight="15" paddingTop="15" gap="20"/>
+		</s:layout>
+		
+		<s:Label text="Waiting for location from {theirName.text}." width="100%"/>
+		
+		<s:Label text="They have until {dtf.format((new Date()).time + (60 * 60 * 1000))} to specify their location using Middle Meetup.  They must enter their name and your name exactly the same way as you did." width="100%"/>
+	</s:Group>
+	
+</s:Group>

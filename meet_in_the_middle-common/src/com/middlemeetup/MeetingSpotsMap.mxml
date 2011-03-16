@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark"
+		 xmlns:mq="com.mapquest.tilemap.*">
+	
+	<fx:Script>
+		<![CDATA[
+			import com.mapquest.LatLng;
+			import com.mapquest.services.geocode.Geocoder;
+			import com.mapquest.services.geocode.GeocoderEvent;
+			import com.mapquest.services.geocode.GeocoderLocation;
+			import com.mapquest.services.search.SearchResult;
+			import com.mapquest.tilemap.InfoWindowEvent;
+			import com.mapquest.tilemap.controls.inputdevice.MouseWheelZoomControl;
+			import com.mapquest.tilemap.controls.shadymeadow.SMDefaultControlSet;
+			import com.mapquest.tilemap.controls.shadymeadow.SMLargeZoomControl;
+			import com.mapquest.tilemap.controls.shadymeadow.SMTrafficControl;
+			import com.mapquest.tilemap.controls.shadymeadow.SMViewControl;
+			import com.mapquest.tilemap.overlays.LineOverlay;
+			import com.mapquest.tilemap.pois.Poi;
+			import com.mapquest.tilemap.pois.StarMapIcon;
+			
+			import flash.filters.BitmapFilterQuality;
+			import flash.filters.GlowFilter;
+			
+			import mx.binding.utils.ChangeWatcher;
+			
+			private function updateMap(event:Event):void
+			{
+				if ((Model.instance.yourLocationGeocoderLocation != null) && (Model.instance.theirLocationGeocoderLocation != null) && (Model.instance.meetingSpots != null))
+				{
+					myMap.removeShapes();
+					
+					var yourPoi:Poi = new Poi(Model.instance.yourLocationGeocoderLocation.displayLatLng);
+					
+					var labelFormat:TextFormat = yourPoi.labelFormat;
+					labelFormat.bold = true;
+					labelFormat.size = 16;
+					
+					var outline:GlowFilter = new GlowFilter(0xffffff, 1, 2, 2, 10, BitmapFilterQuality.HIGH);
+
+					yourPoi.icon = new StarMapIcon(29, 0x00FF00);
+					yourPoi.icon.filters = [outline];
+					yourPoi.setLabel(Model.instance.yourName, labelFormat);
+					myMap.addShape(yourPoi);
+					
+					var theirPoi:Poi = new Poi(Model.instance.theirLocationGeocoderLocation.displayLatLng);
+					
+					theirPoi.icon = new StarMapIcon(29, 0x0000FF);
+					theirPoi.icon.filters = [outline];
+					theirPoi.setLabel(Model.instance.theirName, labelFormat);
+					myMap.addShape(theirPoi);
+					
+					var bounds:Array = new Array();
+					bounds.push(Model.instance.yourLocationGeocoderLocation.displayLatLng);
+					bounds.push(Model.instance.theirLocationGeocoderLocation.displayLatLng);
+					myMap.bestFitLL(bounds);
+					
+					var lineOverlay:LineOverlay = new LineOverlay();
+					lineOverlay.shapePoints = Model.instance.lineLatLngCollection;
+					lineOverlay.borderWidth = 6;
+					lineOverlay.colorAlpha = 0.7;
+					lineOverlay.color = 0x3300cc;
+					myMap.addShape(lineOverlay);
+					
+					for each (var meetingSpot:SearchResult in Model.instance.meetingSpots.source)
+					{
+						var poi:Poi = new Poi(meetingSpot.center);
+						poi.key = meetingSpot.key;
+						poi.rolloverContent = meetingSpot.name;
+						poi.infoWindowTitleText = meetingSpot.name;
+						poi.infoContent = meetingSpot.fields['Address'] + "\n" + meetingSpot.fields['City'] + ", " + meetingSpot.fields['State'] + "\n\n" + meetingSpot.fields['Phone'];
+						myMap.addShape(poi);
+					}
+				}
+			}
+			
+			public function selectMeetingSpot():void
+			{
+				if (Model.instance.selectedMeetingSpot != null)
+				{
+					var poi:Poi = myMap.getShapeByKey(Model.instance.selectedMeetingSpot.key) as Poi;
+					poi.showInfoWindow();
+				}
+			}
+			
+			private function infoWindowOpened(event:InfoWindowEvent):void
+			{
+				for (var i:uint = 0; i < Model.instance.meetingSpots.length; i++)
+				{
+					if (myMap.infoWindow.getOpener().key == Model.instance.meetingSpots.getItemAt(i).key)
+					{
+						Model.instance.selectedMeetingSpot = Model.instance.meetingSpots.getItemAt(i) as SearchResult;
+					}
+				}
+			}
+			
+			private function infoWindowClosed(event:InfoWindowEvent):void
+			{
+				Model.instance.selectedMeetingSpot = null;
+			}
+		]]>
+	</fx:Script>
+	
+	<s:creationComplete>
+		ChangeWatcher.watch(Model.instance, "meetingSpots", updateMap);
+	</s:creationComplete>
+	
+	<mq:TilemapComponent id="myMap" key="{MapSearchService.mqApiKey}" width="100%" height="100%" zoom="2">
+		<mq:creationComplete>
+			myMap.addDefaultEventHandlers();
+			myMap.addControl(new SMLargeZoomControl());
+			myMap.addControl(new SMViewControl());
+			myMap.addControl(new SMTrafficControl());
+			myMap.addControl(new MouseWheelZoomControl());
+			myMap.infoWindow.addEventListener(InfoWindowEvent.OPENED, infoWindowOpened);
+			myMap.infoWindow.addEventListener(InfoWindowEvent.CLOSED, infoWindowClosed);
+		</mq:creationComplete>
+	</mq:TilemapComponent>
+	
+</s:Group>

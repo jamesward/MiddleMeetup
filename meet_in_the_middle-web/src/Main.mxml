@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   xmlns:middlemeetup="com.middlemeetup.*">
+	
+	<fx:Script>
+		import com.mapquest.services.search.SearchResult;
+		import com.middlemeetup.Model;
+	</fx:Script>
+	
+	<s:Panel id="createMeeting" title="Middle Meetup" width="400" horizontalCenter="0" verticalCenter="0">
+		<middlemeetup:CreateMeeting top="15" bottom="15" left="15" right="15">
+			<middlemeetup:meetingCreated>
+				createMeeting.visible = false;
+				selectMeetingSpot.visible = true;
+			</middlemeetup:meetingCreated>
+		</middlemeetup:CreateMeeting>
+	</s:Panel>
+	
+	<s:Panel id="selectMeetingSpot" left="10" right="10" top="10" bottom="10" visible="false" title="Choose a place to Middle Meetup with {Model.instance.theirName}">
+		
+		<s:layout>
+			<s:HorizontalLayout gap="0"/>
+		</s:layout>
+		
+		<middlemeetup:MeetingSpots width="300" height="100%">
+			<middlemeetup:viewMeetingSpotDetails>
+				meetingSpotsMap.selectMeetingSpot();
+			</middlemeetup:viewMeetingSpotDetails>
+			<middlemeetup:meetingSpotSelected>
+				selectMeetingSpot.visible = false;
+				selectedMeetingSpot.visible = true;
+				
+				selectedMeetingSpotView.selectedSpot = event.data as SearchResult;
+			</middlemeetup:meetingSpotSelected>
+		</middlemeetup:MeetingSpots>
+
+		<middlemeetup:MeetingSpotsMap id="meetingSpotsMap" width="100%" height="100%"/>
+		
+	</s:Panel>
+	
+	<s:Panel id="selectedMeetingSpot" visible="false" width="400" horizontalCenter="0" verticalCenter="0">	
+		<middlemeetup:SelectedMeetingSpot id="selectedMeetingSpotView" top="15" bottom="15" left="15" right="15"/>
+	</s:Panel>
+	
+</s:Application>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<flexLibProperties includeAllClasses="true" useMultiPlatformConfig="false" version="3">
+  <includeClasses>
+    <classEntry path="com.middlemeetup.Meeting"/>
+    <classEntry path="com.middlemeetup.MapSearchService"/>
+    <classEntry path="com.middlemeetup.MeetingEvent"/>
+    <classEntry path="com.middlemeetup.MeetingSpots"/>
+    <classEntry path="com.middlemeetup.CreateMeeting"/>
+    <classEntry path="com.middlemeetup.Model"/>
+    <classEntry path="com.middlemeetup.MeetingService"/>
+    <classEntry path="com.middlemeetup.MeetingSpotsMap"/>
+    <classEntry path="com.middlemeetup.SelectedMeetingSpot"/>
+    <classEntry path="com.middlemeetup.MeetingUtils"/>
+  </includeClasses>
+  <includeResources/>
+  <namespaceManifests/>
+</flexLibProperties>

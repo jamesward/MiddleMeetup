@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark">
+
+	<fx:Script>
+		import com.mapquest.services.search.SearchResult;
+		
+		import flash.net.navigateToURL;
+		
+		private var _selectedSpot:SearchResult;
+		
+		public function set selectedSpot(_selectedSpot:SearchResult):void
+		{
+			this._selectedSpot = _selectedSpot;
+			locationName.text = selectedSpot.name;
+			locationAddress.text = selectedSpot.fields['Address'];
+			locationCityState.text = selectedSpot.fields['City'] + ", " + selectedSpot.fields['State'];
+			locationPhone.text = selectedSpot.fields['Phone'];
+		}
+		
+		public function get selectedSpot():SearchResult
+		{
+			return _selectedSpot;
+		}
+	</fx:Script>
+
+	<s:layout>
+		<s:VerticalLayout paddingBottom="20" paddingLeft="20" paddingRight="20" paddingTop="20"/>
+	</s:layout>
+	
+	<s:Label text="You are meeting {Model.instance.theirName} at:" fontSize="18" fontWeight="bold" paddingBottom="20"/>
+	<s:Label id="locationName" fontWeight="bold"/>
+	<s:Label id="locationAddress"/>
+	<s:Label id="locationCityState"/>
+	<s:Label id="locationPhone"/>
+	
+	<s:Group width="100%">			
+		<s:Button label="Get Directions" horizontalCenter="0" verticalCenter="0">
+			<s:click>
+				MeetingUtils.openLocationMap(selectedSpot);
+			</s:click>
+		</s:Button>
+	</s:Group>
+	
+</s:Group>
